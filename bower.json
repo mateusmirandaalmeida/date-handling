@@ -1,0 +1,17 @@
+{
+  "name": "date-handling",
+  "description": "",
+  "main": "src/angular-date-handling",
+  "authors": [
+    "Mateus Miranda <info.mateusmiranda@gmail.com>"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
