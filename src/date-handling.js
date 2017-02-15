@@ -1,44 +1,100 @@
+(function($window){
+  if(!$window){
+    throw "No window :(";
+  }
 
+  var date = $window.Date;
 
-Date.prototype.handlingDays = function (num) {
-    var value = this.valueOf();
-    value += 86400000 * num;
-    return new Date(value);
-}
+  if(!date){
+    throw "No Date in window :(";
+  }
 
-Date.prototype.handlingSeconds = function (num) {
-    var value = this.valueOf();
-    value += 1000 * num;
-    return new Date(value);
-}
+  var _MS_PER_DAY = 1000 * 60 * 60 * 24;
 
-Date.prototype.handlingMinutes = function (num) {
-    var value = this.valueOf();
-    value += 60000 * num;
-    return new Date(value);
-}
+  function getValueInMilliseconds(date, milliseconds, num){
+      var value = date.valueOf();
+      value += milliseconds * num;
+      return value;
+  }
 
-Date.prototype.handlingHours = function (num) {
-    var value = this.valueOf();
-    value += 3600000 * num;
-    return new Date(value);
-}
+  date.prototype.getDaysInMonth = function () {
+      return new Date(this.getFullYear(), this.getMonth(), 0).getDate();
+  };
 
-Date.prototype.handlingMonths = function (num) {
-    var value = new Date(this.valueOf());
+  date.prototype.handlingDays = function (num) {
+      return new Date(getValueInMilliseconds(this, 86400000, num));
+  }
 
-    var mo = this.getMonth();
-    var yr = this.getYear();
+  date.prototype.handlingSeconds = function (num) {
+      return new Date(getValueInMilliseconds(this, 1000, num));
+  }
 
-    mo = (mo + num) % 12;
-    if (0 > mo) {
-        yr += (this.getMonth() + num - mo - 12) / 12;
-        mo += 12;
-    }
-    else
-        yr += ((this.getMonth() + num - mo) / 12);
+  date.prototype.handlingMinutes = function (num) {
+      return new Date(getValueInMilliseconds(this, 60000, num));
+  }
 
-    value.setMonth(mo);
-    value.setYear(yr);
-    return value;
-}
+  date.prototype.handlingHours = function (num) {
+      return new Date(getValueInMilliseconds(this, 3600000, num));
+  }
+
+  date.prototype.handlingMonths = function (num) {
+      var n = this.getDate();
+      this.setDate(1);
+      this.setMonth(this.getMonth() + num);
+      this.setDate(Math.min(n, this.getDaysInMonth()));
+      return this;
+  }
+
+  date.prototype.diffInDays = function(otherDate){
+    var utc1 = Date.UTC(this.getFullYear(), this.getMonth(), this.getDate());
+    var utc2 = Date.UTC(otherDate.getFullYear(), otherDate.getMonth(), otherDate.getDate());
+    return Math.floor((utc2 - utc1) / _MS_PER_DAY);
+  }
+
+  date.prototype.diffInHours = function(otherDate){
+    return Math.abs(this - otherDate) / 36e5;
+  }
+
+  function getMonth(date) {
+    var month = date.getMonth() + 1;
+    return month < 10 ? '0' + month : '' + month;
+  }
+
+  date.prototype.compareDates = function(endDate) {
+      var start = this;
+
+      var toReturn = {
+        years: 0,
+        months: 0,
+        days: 0
+      }
+
+      var days = start.diffInDays(endDate);
+      var startDate = start;
+      daysInMonth = startDate.getDaysInMonth();
+
+      function handling(days){
+        days = start.diffInDays(endDate);
+        daysInMonth = startDate.getDaysInMonth();
+        if(days >= 365){
+          toReturn.years++;
+          startDate = start.handlingMonths(12);
+          daysInMonth = startDate.getDaysInMonth();
+          days-= 365;
+          handling(days);
+        }else if(days >= daysInMonth){
+          toReturn.months++;
+          startDate = start.handlingMonths(1);
+          days-= daysInMonth;
+          handling(days);
+        }else if(days <= daysInMonth){
+          toReturn.days = days;
+        }
+      }
+
+      handling(days);
+
+      return toReturn;
+  }
+
+})(window)
